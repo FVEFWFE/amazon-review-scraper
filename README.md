@@ -1,179 +1,268 @@
-# Amazon Review Scraper
+# Amazon Review Scraper Service
 
-[![Amazon_scraper (1)](https://raw.githubusercontent.com/oxylabs/amazon-scraper/refs/heads/main/Scrape%20Amazon%20data%20with%20Web%20Scraper%20API.png)](https://oxylabs.io/products/scraper-api/ecommerce/amazon?utm_source=877&utm_medium=affiliate&groupid=877&utm_content=amazon-review-scraper-github&transaction_id=102f49063ab94276ae8f116d224b67)
+A production-ready FastAPI microservice for scraping and serving Amazon product reviews. Built for the ArbVault marketplace to provide external review summaries on Product Detail Pages (PDPs).
 
-[![](https://dcbadge.vercel.app/api/server/eWsVUJrnG5)](https://discord.gg/GbxmdGhZjq)
+## 🚀 Features
 
-- [Amazon Review Scraper](#amazon-review-scraper)
-    + [Free Amazon Scraper](#free-amazon-scraper)
-    + [Prerequisites](#prerequisites)
-    + [Installation](#installation)
-    + [Retrieving the ASIN code of an Amazon product to scrape reviews from](#retrieving-the-asin-code-of-an-amazon-product-to-scrape-reviews-from)
-    + [Scraping Amazon Review data](#scraping-amazon-review-data)
-    + [Retrieved data](#retrieved-data)
-    + [Notes](#notes)
-- [Scraping Amazon with Oxylabs API](#scraping-amazon-with-oxylabs-api)
-    + [Python code example](#python-code-example)
-    + [Output Example](#output-example)
+- **FastAPI REST API** with automatic OpenAPI documentation
+- **Dual scraping sources**: Free mode (rate-limited) and Oxylabs API (production)
+- **Background job processing** with Celery and Redis
+- **SQLite database** with SQLAlchemy ORM for review storage
+- **Redis caching** with 15-minute TTL for improved performance
+- **Cursor-based pagination** for efficient data retrieval
+- **Prometheus metrics** for monitoring
+- **Docker support** with multi-stage builds
+- **Comprehensive test suite** with pytest
+- **Rate limiting** and retry logic with exponential backoff
+- **CORS support** for frontend integration
 
-Amazon Review Scraper is designed to extract localized Amazon ratings and reviews in real-time without a hitch. In this guide, we'll demonstrate how to get this data for **free** on a small scale. If you need a bigger scale scraper, please refer to the 2nd part of the tutorial, where we'll scrape public Amazon data with Oxylabs API.
+## 📋 Prerequisites
 
-### Free Amazon Scraper
+- Python 3.11+
+- Poetry (for dependency management)
+- Docker and Docker Compose (for containerized deployment)
+- Redis (for caching and job queue)
+- Oxylabs API credentials (for production use)
 
-A free tool used to get Amazon review data for a provided Amazon product.
+## 🛠️ Installation
 
-### Prerequisites
+### Local Development
 
-To run this tool, you need to have Python 3.11 installed in your system.
-
-### Installation
-
-Open up a terminal window, navigate to this repository and run this command:
-
-```make install```
-
-### Retrieving the ASIN code of an Amazon product to scrape reviews from
-
-First off, open up a product you want to scrape reviews from in Amazon.
-
-After the page has loaded, click on the URL of the page in your browser.
-
-You should see something like this: `https://amazon.com/<product_info>/dp/<asin_code>`
-
-For this example, let's take a cat bed from Amazon as a product.
-
-The URL for this product looks like this: `https://www.amazon.com/Warming-Pets-Removable-Non-Slip-Washable/dp/B096S3QHWL`
-
-<img width="1203" alt="image" src="https://github.com/user-attachments/assets/bf05be64-2ea4-464f-81a8-e62cc6262682">
-
-Copy and save the ASIN code. We'll use it for scraping reviews for this product.
-
-The ASIN code for this product is: `B096S3QHWL`. 
-
-### Scraping Amazon Review data
-
-To get reviews for a selected product, simply run this command in your terminal:
-
-```make scrape ASIN_CODE="<your_selected_asin_code>"```
-
-With the ASIN code we retrieved earlier, the command would look like this:
-
-```make scrape ASIN_CODE="B096S3QHWL"```
-
-Make sure to surround the code with quotation marks, otherwise the tool might have trouble parsing it.
-
-After running the command, your terminal should look something like this:
-
-<img width="741" alt="image" src="https://github.com/user-attachments/assets/ad46303b-c537-4b72-849a-c3770f94966a">
-
-### Retrieved data
-
-After the tool has finished running, you should see a file named `amazon_reviews.csv` in your directory.
-
-The generated CSV file contains data with these columns inside it:
-
-- `author` - The author of the review.
-- `content` - The content of the review.
-- `rating` - The rating for the product.
-- `title` - The title of the review.
-
-The data should look something like this:
-
-<img width="960" alt="image" src="https://github.com/user-attachments/assets/a0bd8d85-c6be-4506-8ace-8a755e8c3702">
-
-### Notes
-
-In case the code doesn't work or your project is of bigger scale, please refer to the second part of the tutorial. There, we showcase how to scrape public data with Oxylabs Scraper API.
-
-## Scraping Amazon with Oxylabs API
-
-Now, we'll demonstrate how to scrape public Amazon review data with Oxylabs API. Bear in mind that you'll need an active subsciption to use this tool–you may get a free trial [here](https://dashboard.oxylabs.io/). 
-
-You can retrieve Amazon reviews by providing the **ASIN** number to our service. Our API will return the results in **JSON** or **HTML** format.
-
-### Python code example
-
-The following example showcases how you can make a request to retrieve
-product reviews for ASIN **B08238V32L** on the `amazon.nl` marketplace:
-
-```python
-import requests
-from pprint import pprint
-
-
-# Structure payload.
-payload = {
-    'source': 'amazon_reviews',
-    'domain': 'nl',
-    'query': 'B08238V32L',
-    'parse': True,
-}
-
-
-# Get response.
-response = requests.request(
-    'POST',
-    'https://realtime.oxylabs.io/v1/queries',
-    auth=('user', 'pass1'),
-    json=payload,
-)
-
-# Print prettified response to stdout.
-pprint(response.json())
-
+1. Clone the repository:
+```bash
+git clone https://github.com/FVEFWFE/amazon-review-scraper.git
+cd amazon-review-scraper
 ```
 
-See code examples for other programming languages
-[<u>here</u>](https://developers.oxylabs.io/scraper-apis/e-commerce-scraper-api/amazon/reviews#code-examples).
+2. Initialize the project:
+```bash
+make init
+```
 
-### Output Example
+3. Configure environment variables:
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
 
-```json
+4. Install dependencies:
+```bash
+make install
+```
+
+### Docker Deployment
+
+1. Build and start services:
+```bash
+make up
+```
+
+2. View logs:
+```bash
+make logs
+```
+
+3. Stop services:
+```bash
+make down
+```
+
+## 🔧 Configuration
+
+Environment variables (see `.env.example`):
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OXYSCRAPER_AUTH_USER` | Oxylabs API username | - |
+| `OXYSCRAPER_AUTH_PASS` | Oxylabs API password | - |
+| `REDIS_URL` | Redis connection URL | `redis://localhost:6379/0` |
+| `REVIEWS_DB_URL` | Database connection URL | `sqlite:///./data/reviews.db` |
+| `RATE_LIMIT_RPS` | Requests per second (free mode) | `1.0` |
+| `MAX_PAGES_FREE` | Max pages to scrape (free mode) | `2` |
+| `MAX_PAGES_OXYLABS` | Max pages to scrape (Oxylabs) | `10` |
+| `CACHE_TTL_SECONDS` | Cache TTL in seconds | `900` |
+
+## 📡 API Endpoints
+
+### Health Check
+```http
+GET /health
+```
+Returns service health status.
+
+### Initiate Scraping
+```http
+POST /scrape
+Content-Type: application/json
+
 {
-  "results": [
-    {
-      "content": {
-        "asin": "B08238V32L",
-        "asin_in_url": "B08238V32L",
-        "page": 1,
-        "page_type": "Question",
-        "pages": 1,
-        "parse_status_code": 12000,
-        "product_name": "VASAGLE bureau, computer bureau, 100 x 50 x 75 cm, eenvoudige constructie, industriële vormgeving, vintage bruin-zwart LWD41X",
-        "reviews": [
-          {
-            "author": "jack ouwehand",
-            "content": "de levering was eerder dan gepland ,dat was prettig.. Het wordt gebruikt als computertafel",
-            "id": "R238HIUHAN7PFT",
-            "is_verified": "True",
-            "product_attributes": "Maat: 100 x 50 x 75 cmKleur: Honingbruin + Zwart",
-            "rating": 4,
-            "timestamp": "Beoordeeld in Nederland 🇳🇱 op 20 juni 2023",
-            "title": "4,0 van 5 sterren dat het product eenvoudig met de gebruiksaanwijzing in elkaar kon worden gezet."
-          },
-          ...
-          {
-            "author": "mstf",
-            "content": "A really solid table, I definitely recommend it, I bought this table as a result of my long research.",
-            "id": "R13WDAOIY4YVXJ",
-            "is_verified": "True",
-            "product_attributes": "",
-            "rating": 5,
-            "timestamp": "Beoordeeld in Nederland 🇳🇱 op 5 mei 2022",
-            "title": "5,0 van 5 sterren i think best price performance table"
-          }
-        ],
-        "url": "https://www.amazon.nl/product-reviews/B08238V32L?reviewerType=all_reviews&pageNumber=1"
-      },
-      "created_at": "2023-07-19 14:04:35",
-      "job_id": "7087432033898598401",
-      "page": 1,
-      "parser_type": "",
-      "status_code": 200,
-      "updated_at": "2023-07-19 14:04:38",
-      "url": "https://www.amazon.nl/product-reviews/B08238V32L?reviewerType=all_reviews&pageNumber=1"
-    }
-  ]
+  "asin": "B08N5WRWNW",
+  "domain": "com",
+  "source": "free"
 }
 ```
-Check out other tutorials on scraping Amazon data: [Amazon ASIN Scraper](https://github.com/oxylabs/amazon-asin-scraper), [Bypass Amazon CAPTCHA](https://github.com/oxylabs/how-to-bypass-amazon-captcha), [How to Scrape Amazon Prices](https://github.com/oxylabs/how-to-scrape-amazon-prices), [Scraping Amazon Product Data](https://github.com/oxylabs/how-to-scrape-amazon-product-data)
+Queues a scraping job. Sources: `free` or `oxylabs`.
+
+### Get Job Status
+```http
+GET /jobs/{job_id}
+```
+Returns the status of a scraping job.
+
+### Get Reviews
+```http
+GET /reviews?asin=B08N5WRWNW&domain=com&limit=20&cursor=R1234567890
+```
+Returns paginated reviews for a product.
+
+### Get Statistics
+```http
+GET /stats?asin=B08N5WRWNW&domain=com
+```
+Returns aggregated review statistics.
+
+### Prometheus Metrics
+```http
+GET /metrics
+```
+Returns Prometheus-formatted metrics.
+
+## 🧪 Testing
+
+Run the test suite:
+```bash
+make test
+```
+
+Run with coverage:
+```bash
+poetry run pytest --cov=src --cov-report=html
+```
+
+## 🐳 Docker Architecture
+
+The service uses a multi-container architecture:
+
+- **api**: FastAPI application server
+- **worker**: Celery worker for background jobs
+- **beat**: Celery beat for scheduled tasks
+- **redis**: Redis for caching and job queue
+- **flower**: Celery monitoring UI (development only)
+
+## 📊 Data Models
+
+### Review
+```python
+{
+  "id": "R1234567890",
+  "asin": "B08N5WRWNW",
+  "domain": "com",
+  "author": "John Doe",
+  "title": "Great product!",
+  "content": "This product exceeded my expectations...",
+  "rating": 5,
+  "is_verified": true,
+  "product_attributes": "Color: Black, Size: Large",
+  "timestamp_text": "Reviewed on January 1, 2024",
+  "fetched_at": "2024-01-15T10:30:00Z"
+}
+```
+
+### ReviewStats
+```python
+{
+  "asin": "B08N5WRWNW",
+  "domain": "com",
+  "review_count": 1523,
+  "average_rating": 4.3,
+  "rating_breakdown": {
+    "1": 45,
+    "2": 67,
+    "3": 189,
+    "4": 456,
+    "5": 766
+  },
+  "last_reviewed_at_text": "Reviewed on January 15, 2024",
+  "last_fetched_at": "2024-01-15T10:30:00Z"
+}
+```
+
+## 🔐 Security Considerations
+
+- **Rate Limiting**: Free mode is limited to 1 RPS with max 2 pages
+- **Authentication**: Oxylabs API requires credentials
+- **CORS**: Configured for specific origins
+- **Input Validation**: Pydantic models validate all inputs
+- **SQL Injection**: Protected via SQLAlchemy ORM
+- **XSS Prevention**: All content is escaped in frontend
+
+## 📈 Performance
+
+- **Caching**: Redis caches results for 15 minutes
+- **Pagination**: Cursor-based pagination for efficient data retrieval
+- **Background Processing**: Celery handles long-running scraping tasks
+- **Database Indexing**: Optimized indexes on ASIN and domain
+- **Connection Pooling**: SQLAlchemy manages database connections
+
+## 🚦 Monitoring
+
+- **Health Endpoint**: `/health` for service monitoring
+- **Prometheus Metrics**: `/metrics` for detailed metrics
+- **Flower UI**: Available at `http://localhost:5555` in dev mode
+- **Structured Logging**: JSON-formatted logs for easy parsing
+
+## 📝 Development Workflow
+
+1. **Format code**:
+```bash
+make format
+```
+
+2. **Run linting**:
+```bash
+make lint
+```
+
+3. **Type checking**:
+```bash
+make type-check
+```
+
+4. **Run all checks**:
+```bash
+make check
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and linting
+5. Submit a pull request
+
+## 📄 License
+
+This project is proprietary software for ArbVault marketplace.
+
+## 🆘 Support
+
+For issues or questions, please open an issue on GitHub or contact the development team.
+
+## 🔄 CI/CD
+
+The project includes GitHub Actions workflows for:
+- Running tests on pull requests
+- Building and pushing Docker images
+- Deploying to staging/production
+
+## 📚 Additional Resources
+
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [Oxylabs API Documentation](https://developers.oxylabs.io/)
+- [Celery Documentation](https://docs.celeryproject.org/)
+- [SQLAlchemy Documentation](https://www.sqlalchemy.org/)
+
+---
+
+Built with ❤️ for ArbVault marketplace

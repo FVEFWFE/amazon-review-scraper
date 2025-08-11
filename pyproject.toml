@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "amazon-review-scraper"
-version = "0.1.0"
-description = "A tool for scraping Amazon Reviews."
+version = "0.2.0"
+description = "FastAPI microservice for scraping and serving Amazon Reviews"
 packages = [
     { include = "amazon_review_scraper", from = "src" },
 ]
@@ -10,14 +10,46 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+# Core
+fastapi = "^0.109.0"
+uvicorn = {extras = ["standard"], version = "^0.27.0"}
 pydantic = "^2.7.4"
-click = "^8.1.7"
-pandas = "^2.2.2"
+pydantic-settings = "^2.3.4"
+
+# HTTP and scraping
+httpx = "^0.26.0"
 selenium = "^4.22.0"
 webdriver-manager = "^4.0.1"
-pydantic-settings = "^2.3.4"
+beautifulsoup4 = "^4.12.0"
+lxml = "^5.1.0"
+
+# Database and caching
+sqlalchemy = "^2.0.25"
+redis = "^5.0.1"
+celery = {extras = ["redis"], version = "^5.3.0"}
+
+# Utilities
+click = "^8.1.7"
+tenacity = "^8.2.3"
+python-dotenv = "^1.0.0"
+prometheus-client = "^0.19.0"
+
+# Data processing
+pandas = "^2.2.2"
 blinker="<1.8.0"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+pytest-cov = "^4.1.0"
+vcrpy = "^5.1.0"
+faker = "^22.0.0"
+factory-boy = "^3.3.0"
+black = "^24.0.0"
+ruff = "^0.1.0"
+mypy = "^1.8.0"
+types-redis = "^4.6.0"
+httpx-mock = "^0.1.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -39,3 +71,18 @@ combine_as_imports = true
 profile = "black"
 lines_between_types = 1
 lines_after_imports = 2
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "N", "W", "UP", "B", "C90", "RUF"]
+ignore = ["E501", "B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-v --cov=src --cov-report=term-missing --cov-report=html"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/__init__.py"]

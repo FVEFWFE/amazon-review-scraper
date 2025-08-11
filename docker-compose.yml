@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # Redis for caching and queue
+  redis:
+    image: redis:7-alpine
+    container_name: reviews-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - reviews-network
+
+  # FastAPI application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reviews-api
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - REVIEWS_DB_URL=sqlite:///./data/reviews.db
+      - LOG_LEVEL=INFO
+      - DEBUG=false
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - reviews-network
+    restart: unless-stopped
+
+  # Celery worker for background tasks
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reviews-worker
+    command: celery -A amazon_review_scraper.tasks worker --loglevel=info --concurrency=2
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - REVIEWS_DB_URL=sqlite:///./data/reviews.db
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - reviews-network
+    restart: unless-stopped
+
+  # Celery beat for scheduled tasks (optional)
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reviews-beat
+    command: celery -A amazon_review_scraper.tasks beat --loglevel=info
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - REVIEWS_DB_URL=sqlite:///./data/reviews.db
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - reviews-network
+    restart: unless-stopped
+
+  # Flower for monitoring Celery (optional, for development)
+  flower:
+    image: mher/flower:2.0
+    container_name: reviews-flower
+    command: celery flower --broker=redis://redis:6379/1 --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      - redis
+    networks:
+      - reviews-network
+    profiles:
+      - dev
+
+networks:
+  reviews-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
