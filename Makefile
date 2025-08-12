@@ -1,12 +1,13 @@
 # Makefile for running Amazon review scraper
 
 
-.PHONY: help install test dev up down clean lint format type-check build logs
+.PHONY: help install install-pip test dev up down clean lint format type-check build logs
 
 # Default target
 help:
 	@echo "Available targets:"
-	@echo "  install     - Install dependencies with Poetry"
+	@echo "  install     - Install dependencies with Poetry (if available) or pip"
+	@echo "  install-pip - Install dependencies with pip"
 	@echo "  test        - Run tests with coverage"
 	@echo "  dev         - Run development server locally"
 	@echo "  up          - Start services with docker-compose"
@@ -20,16 +21,37 @@ help:
 
 # Install dependencies
 install:
-	poetry install --with dev
+	@if command -v poetry >/dev/null 2>&1; then \
+		echo "Installing with Poetry..."; \
+		poetry install --with dev; \
+	else \
+		echo "Poetry not found, installing with pip..."; \
+		pip install -r requirements.txt; \
+		pip install pytest pytest-asyncio pytest-cov vcrpy faker factory-boy black ruff mypy types-redis; \
+	fi
 	@echo "✅ Dependencies installed"
+
+# Install with pip explicitly
+install-pip:
+	pip install -r requirements.txt
+	pip install pytest pytest-asyncio pytest-cov vcrpy faker factory-boy black ruff mypy types-redis
+	@echo "✅ Dependencies installed with pip"
 
 # Run tests
 test:
-	poetry run pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html
+	@if command -v poetry >/dev/null 2>&1; then \
+		poetry run pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html; \
+	else \
+		pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html; \
+	fi
 
 # Run development server
 dev:
-	poetry run uvicorn amazon_review_scraper.api:app --reload --host 0.0.0.0 --port 8080
+	@if command -v poetry >/dev/null 2>&1; then \
+		poetry run uvicorn amazon_review_scraper.api:app --reload --host 0.0.0.0 --port 8080; \
+	else \
+		uvicorn amazon_review_scraper.api:app --reload --host 0.0.0.0 --port 8080; \
+	fi
 
 # Start Docker services
 up:
@@ -67,17 +89,31 @@ clean:
 
 # Linting
 lint:
-	poetry run ruff check src/
-	poetry run flake8 src/
+	@if command -v poetry >/dev/null 2>&1; then \
+		poetry run ruff check src/; \
+		poetry run flake8 src/; \
+	else \
+		ruff check src/; \
+		flake8 src/; \
+	fi
 
 # Format code
 format:
-	poetry run black src/
-	poetry run isort src/
+	@if command -v poetry >/dev/null 2>&1; then \
+		poetry run black src/; \
+		poetry run isort src/; \
+	else \
+		black src/; \
+		isort src/; \
+	fi
 
 # Type checking
 type-check:
-	poetry run mypy src/
+	@if command -v poetry >/dev/null 2>&1; then \
+		poetry run mypy src/; \
+	else \
+		mypy src/; \
+	fi
 
 # Run all checks
 check: lint type-check test

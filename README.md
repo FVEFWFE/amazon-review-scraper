@@ -19,7 +19,7 @@ A production-ready FastAPI microservice for scraping and serving Amazon product 
 ## 📋 Prerequisites
 
 - Python 3.11+
-- Poetry (for dependency management)
+- Poetry (for dependency management) OR pip
 - Docker and Docker Compose (for containerized deployment)
 - Redis (for caching and job queue)
 - Oxylabs API credentials (for production use)
@@ -34,20 +34,28 @@ git clone https://github.com/FVEFWFE/amazon-review-scraper.git
 cd amazon-review-scraper
 ```
 
-2. Initialize the project:
-```bash
-make init
-```
-
-3. Configure environment variables:
+2. Configure environment variables:
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
-4. Install dependencies:
+3. Install dependencies:
+
+**Option A: Using Poetry (recommended for development)**
 ```bash
-make install
+pip install poetry
+poetry install
+```
+
+**Option B: Using pip**
+```bash
+pip install -r requirements.txt
+```
+
+4. Initialize the project:
+```bash
+mkdir -p data logs
 ```
 
 ### Docker Deployment
@@ -130,13 +138,20 @@ Returns Prometheus-formatted metrics.
 ## 🧪 Testing
 
 Run the test suite:
+
+**With Poetry:**
 ```bash
-make test
+poetry run pytest tests/
+```
+
+**With pip:**
+```bash
+pytest tests/
 ```
 
 Run with coverage:
 ```bash
-poetry run pytest --cov=src --cov-report=html
+pytest --cov=src --cov-report=html
 ```
 
 ## 🐳 Docker Architecture
